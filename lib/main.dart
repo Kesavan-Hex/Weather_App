@@ -61,12 +61,9 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
               ),
-              child: Text(
-                'Weather Forecast',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Image.asset(
+                'assets/logo.png',
+                width: 150,
               ),
             ),
             ListTile(
