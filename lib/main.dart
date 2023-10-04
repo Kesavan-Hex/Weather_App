@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,6 +34,52 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  bool hasInternet = true;
+
+  @override
+  void initState() {
+    super.initState();
+    checkInternetConnectivity();
+  }
+
+  Future<void> checkInternetConnectivity() async {
+    try {
+      final response = await http.get(Uri.parse('https://www.google.com'));
+      setState(() {
+        hasInternet = response.statusCode == 200;
+      });
+    } catch (e) {
+      setState(() {
+        hasInternet = false;
+      });
+    }
+
+    if (!hasInternet) {
+      showInternetPopup();
+    }
+  }
+
+  void showInternetPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Internet Connection Required'),
+          content: Text('Please check your internet connection and try again.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                SystemNavigator.pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
