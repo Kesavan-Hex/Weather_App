@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
-import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? currentLocation;
   bool hasInternet = true;
   Map<String, dynamic>? weatherData;
+  bool isCelsius = true;
 
   @override
   void initState() {
@@ -88,11 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      setState(() {
-        currentLocation =
-            'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
-        fetchWeatherData(position.latitude, position.longitude);
-      });
+      fetchWeatherData(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location: $e');
     }
@@ -124,11 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      setState(() {
-        currentLocation =
-            'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
-        fetchWeatherData(position.latitude, position.longitude);
-      });
+      fetchWeatherData(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location on web: $e');
     }
@@ -156,7 +148,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchWeatherData(double latitude, double longitude) async {
-    final apiKey = 'dbf8210447f99f7efc0d4457ec4c1917';
+    final apiKey =
+        'dbf8210447f99f7efc0d4457ec4c1917'; // Replace with your API key
     final url =
         'https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$apiKey';
 
@@ -178,19 +171,62 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // Function to format DateTime to a 12-hour time string
+  String formatTime(DateTime time) {
+    final hour = time.hour > 12 ? time.hour - 12 : time.hour;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
+  }
+
+  // Method to toggle between Celsius and Fahrenheit
+  void toggleTemperatureUnit() {
+    setState(() {
+      isCelsius = !isCelsius;
+    });
+  }
+
+  // Widget to display temperature with icon
+  Widget buildTemperature(String temperature, String label, IconData icon) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          size: 40,
+          color: Colors.blue,
+        ),
+        Text(
+          '$temperature',
+          style: TextStyle(fontSize: 24),
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: 18),
+        ),
+      ],
+    );
+  }
+
   // Widget to display weather details
   Widget buildWeatherDetails() {
     if (weatherData == null) {
-      return Container();
+      return Container(); // Return an empty container if data is not available
     }
 
     final mainWeather = weatherData!["weather"][0];
     final mainInfo = weatherData!["main"];
     final windInfo = weatherData!["wind"];
 
-    // Convert temperature from Kelvin to Celsius
-    final double temperatureInKelvin = mainInfo["temp"];
-    final double temperatureInCelsius = temperatureInKelvin - 273.15;
+    // Convert temperature to Celsius or Fahrenheit based on the unit
+    double temperature = mainInfo["temp"] - 273.15;
+    double maxTemperature = mainInfo["temp_max"] - 273.15;
+    double minTemperature = mainInfo["temp_min"] - 273.15;
+
+    if (!isCelsius) {
+      temperature = (temperature * 9 / 5) + 32;
+      maxTemperature = (maxTemperature * 9 / 5) + 32;
+      minTemperature = (minTemperature * 9 / 5) + 32;
+    }
 
     // Get the cloud icon based on weather condition
     final cloudIcon = mainWeather["icon"];
@@ -207,59 +243,43 @@ class _MyHomePageState extends State<MyHomePage> {
           '${weatherData!["name"]}, ${weatherData!["sys"]["country"]}',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
+        SizedBox(height: 20),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Image.network(
-              'https://openweathermap.org/img/wn/$cloudIcon.png',
-              width: 50,
-              height: 50,
+            buildTemperature(
+              '${temperature.toStringAsFixed(2)}${isCelsius ? '°C' : '°F'}',
+              'Temperature',
+              Icons.thermostat,
             ),
-            SizedBox(width: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Sunrise: ${DateFormat('hh:mm a').format(sunrise)}',
-                  style: TextStyle(fontSize: 16),
-                ),
-                Text(
-                  'Sunset: ${DateFormat('hh:mm a').format(sunset)}',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
+            buildTemperature(
+              '${maxTemperature.toStringAsFixed(2)}${isCelsius ? '°C' : '°F'}',
+              'Max Temp',
+              Icons.arrow_upward,
+            ),
+            buildTemperature(
+              '${minTemperature.toStringAsFixed(2)}${isCelsius ? '°C' : '°F'}',
+              'Min Temp',
+              Icons.arrow_downward,
             ),
           ],
         ),
         SizedBox(height: 20),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            ElevatedButton(
-              onPressed: () {
-                // Implement temperature conversion to Fahrenheit here
-              },
-              child: Text('Convert to Fahrenheit'),
+            buildTemperature(
+              formatTime(sunrise),
+              'Sunrise',
+              Icons.wb_sunny,
             ),
-            SizedBox(width: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Temperature: ${temperatureInCelsius.toStringAsFixed(2)}°C',
-                  style: TextStyle(fontSize: 24),
-                ),
-                Text(
-                  'Max Temp: ${mainInfo["temp_max"].toStringAsFixed(2)}°C',
-                  style: TextStyle(fontSize: 18),
-                ),
-                Text(
-                  'Min Temp: ${mainInfo["temp_min"].toStringAsFixed(2)}°C',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ],
+            buildTemperature(
+              formatTime(sunset),
+              'Sunset',
+              Icons.nightlight_round,
             ),
           ],
         ),
-        SizedBox(height: 20),
         Card(
           color: Colors.lightBlue[100],
           child: Padding(
@@ -267,6 +287,12 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Image.network(
+                  'https://openweathermap.org/img/wn/$cloudIcon.png',
+                  width: 100,
+                  height: 100,
+                ),
+                SizedBox(height: 20),
                 Text(
                   'Visibility: ${weatherData!["visibility"]} meters',
                   style: TextStyle(fontSize: 18),
@@ -309,17 +335,17 @@ class _MyHomePageState extends State<MyHomePage> {
           },
         ),
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            if (currentLocation != null)
-              Text(
-                'Current Location: $currentLocation',
-                style: TextStyle(fontSize: 18),
-              ),
+            buildWeatherDetails(),
             SizedBox(height: 20),
-            buildWeatherDetails(), // Display weather details
+            ElevatedButton(
+              onPressed: toggleTemperatureUnit,
+              child: Text(isCelsius ? 'Switch to °F' : 'Switch to °C'),
+            ),
           ],
         ),
       ),
