@@ -66,13 +66,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 150,
               ),
             ),
-            ListTile(
-              title: Text('Item 1'),
-              onTap: () {},
-            ),
-            ListTile(
-              title: Text('Item 2'),
-              onTap: () {},
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  hintText: 'Search...',
+                  suffixIcon: Icon(Icons.search),
+                ),
+              ),
             ),
           ],
         ),
