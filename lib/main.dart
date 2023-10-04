@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -155,8 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchWeatherData(double latitude, double longitude) async {
-    final apiKey =
-        'dbf8210447f99f7efc0d4457ec4c1917'; // Replace with your API key
+    final apiKey = 'dbf8210447f99f7efc0d4457ec4c1917';
     final url =
         'https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$apiKey';
 
@@ -181,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // Widget to display weather details
   Widget buildWeatherDetails() {
     if (weatherData == null) {
-      return Container(); // Return an empty container if data is not available
+      return Container();
     }
 
     final mainWeather = weatherData!["weather"][0];
@@ -192,35 +192,104 @@ class _MyHomePageState extends State<MyHomePage> {
     final double temperatureInKelvin = mainInfo["temp"];
     final double temperatureInCelsius = temperatureInKelvin - 273.15;
 
+    // Get the cloud icon based on weather condition
+    final cloudIcon = mainWeather["icon"];
+
+    // Convert sunrise and sunset times to 12-hour format
+    final sunrise = DateTime.fromMillisecondsSinceEpoch(
+        weatherData!["sys"]["sunrise"] * 1000);
+    final sunset = DateTime.fromMillisecondsSinceEpoch(
+        weatherData!["sys"]["sunset"] * 1000);
+
     return Column(
       children: [
         Text(
-          'Weather Details:',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          '${weatherData!["name"]}, ${weatherData!["sys"]["country"]}',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        Text(
-          'Location: ${weatherData!["name"]}, ${weatherData!["sys"]["country"]}',
-          style: TextStyle(fontSize: 16),
+        Row(
+          children: [
+            Image.network(
+              'https://openweathermap.org/img/wn/$cloudIcon.png',
+              width: 50,
+              height: 50,
+            ),
+            SizedBox(width: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sunrise: ${DateFormat('hh:mm a').format(sunrise)}',
+                  style: TextStyle(fontSize: 16),
+                ),
+                Text(
+                  'Sunset: ${DateFormat('hh:mm a').format(sunset)}',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ],
         ),
-        Text(
-          'Temperature: ${temperatureInCelsius.toStringAsFixed(2)}°C',
-          style: TextStyle(fontSize: 16),
+        SizedBox(height: 20),
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                // Implement temperature conversion to Fahrenheit here
+              },
+              child: Text('Convert to Fahrenheit'),
+            ),
+            SizedBox(width: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Temperature: ${temperatureInCelsius.toStringAsFixed(2)}°C',
+                  style: TextStyle(fontSize: 24),
+                ),
+                Text(
+                  'Max Temp: ${mainInfo["temp_max"].toStringAsFixed(2)}°C',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text(
+                  'Min Temp: ${mainInfo["temp_min"].toStringAsFixed(2)}°C',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+          ],
         ),
-        Text(
-          'Weather: ${mainWeather["description"]}',
-          style: TextStyle(fontSize: 16),
-        ),
-        Text(
-          'Pressure: ${mainInfo["pressure"]} hPa',
-          style: TextStyle(fontSize: 16),
-        ),
-        Text(
-          'Humidity: ${mainInfo["humidity"]}%',
-          style: TextStyle(fontSize: 16),
-        ),
-        Text(
-          'Wind Speed: ${windInfo["speed"]} m/s',
-          style: TextStyle(fontSize: 16),
+        SizedBox(height: 20),
+        Card(
+          color: Colors.lightBlue[100],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Visibility: ${weatherData!["visibility"]} meters',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text(
+                  'Wind Speed: ${windInfo["speed"]} m/s',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text(
+                  'Humidity: ${mainInfo["humidity"]}%',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text(
+                  'Sea Level: ${mainInfo["sea_level"]} hPa',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text(
+                  'Ground Level: ${mainInfo["grnd_level"]} hPa',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -249,6 +318,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 'Current Location: $currentLocation',
                 style: TextStyle(fontSize: 18),
               ),
+            SizedBox(height: 20),
             buildWeatherDetails(), // Display weather details
           ],
         ),
