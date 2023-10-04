@@ -39,10 +39,18 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  TextEditingController _cityController = TextEditingController();
+
   String? currentLocation;
   bool hasInternet = true;
   Map<String, dynamic>? weatherData;
   bool isCelsius = true;
+
+  @override
+  void dispose() {
+    _cityController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -148,8 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchWeatherData(double latitude, double longitude) async {
-    final apiKey =
-        'dbf8210447f99f7efc0d4457ec4c1917'; // Replace with your API key
+    final apiKey = 'dbf8210447f99f7efc0d4457ec4c1917';
     final url =
         'https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$apiKey';
 
@@ -171,7 +178,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Function to format DateTime to a 12-hour time string
   String formatTime(DateTime time) {
     final hour = time.hour > 12 ? time.hour - 12 : time.hour;
     final minute = time.minute.toString().padLeft(2, '0');
@@ -179,14 +185,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return '$hour:$minute $period';
   }
 
-  // Method to toggle between Celsius and Fahrenheit
   void toggleTemperatureUnit() {
     setState(() {
       isCelsius = !isCelsius;
     });
   }
 
-  // Widget to display temperature with icon
   Widget buildTemperature(String temperature, String label, IconData icon) {
     return Column(
       children: [
@@ -207,17 +211,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // Widget to display weather details
   Widget buildWeatherDetails() {
     if (weatherData == null) {
-      return Container(); // Return an empty container if data is not available
+      return Container();
     }
 
     final mainWeather = weatherData!["weather"][0];
     final mainInfo = weatherData!["main"];
     final windInfo = weatherData!["wind"];
 
-    // Convert temperature to Celsius or Fahrenheit based on the unit
     double temperature = mainInfo["temp"] - 273.15;
     double maxTemperature = mainInfo["temp_max"] - 273.15;
     double minTemperature = mainInfo["temp_min"] - 273.15;
@@ -228,10 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
       minTemperature = (minTemperature * 9 / 5) + 32;
     }
 
-    // Get the cloud icon based on weather condition
     final cloudIcon = mainWeather["icon"];
-
-    // Convert sunrise and sunset times to 12-hour format
     final sunrise = DateTime.fromMillisecondsSinceEpoch(
         weatherData!["sys"]["sunrise"] * 1000);
     final sunset = DateTime.fromMillisecondsSinceEpoch(
@@ -411,6 +410,36 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void handleSearch() {
+    final city = _cityController.text;
+    if (city.isNotEmpty) {
+      fetchWeatherDataByCity(city);
+    }
+  }
+
+  Future<void> fetchWeatherDataByCity(String city) async {
+    final apiKey = 'dbf8210447f99f7efc0d4457ec4c1917';
+    final url =
+        'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        setState(() {
+          weatherData = jsonData;
+        });
+      } else {
+        // Handle error
+        print('Failed to fetch weather data: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle error
+      print('Error fetching weather data: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -450,12 +479,16 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
+                controller: _cityController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                   hintText: 'Search...',
-                  suffixIcon: Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: handleSearch, // Call handleSearch function
+                  ),
                 ),
               ),
             ),
