@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -36,14 +39,18 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  String? currentLocation;
   bool hasInternet = true;
+  Map<String, dynamic>? weatherData;
 
   @override
   void initState() {
     super.initState();
     if (!kIsWeb) {
-      // Check internet connectivity only if not running on the web
       checkInternetConnectivity();
+      requestLocationPermission();
+    } else {
+      getCurrentLocationWeb();
     }
   }
 
@@ -61,6 +68,68 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (!hasInternet) {
       showInternetPopup();
+    }
+  }
+
+  Future<void> requestLocationPermission() async {
+    if (!kIsWeb) {
+      final status = await Permission.location.request();
+      if (status.isGranted) {
+        getCurrentLocation();
+      } else if (status.isDenied) {
+        showLocationPermissionDeniedDialog();
+      }
+    }
+  }
+
+  Future<void> getCurrentLocation() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        currentLocation =
+            'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
+        fetchWeatherData(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      print('Error getting location: $e');
+    }
+  }
+
+  void showLocationPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Location Permission Required'),
+          content: Text(
+              'Please grant location permission to access your current location.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> getCurrentLocationWeb() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        currentLocation =
+            'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
+        fetchWeatherData(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      print('Error getting location on web: $e');
     }
   }
 
@@ -85,6 +154,78 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<void> fetchWeatherData(double latitude, double longitude) async {
+    final apiKey =
+        'dbf8210447f99f7efc0d4457ec4c1917'; // Replace with your API key
+    final url =
+        'https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$apiKey';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        setState(() {
+          weatherData = jsonData;
+        });
+      } else {
+        // Handle error
+        print('Failed to fetch weather data: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle error
+      print('Error fetching weather data: $e');
+    }
+  }
+
+  // Widget to display weather details
+  Widget buildWeatherDetails() {
+    if (weatherData == null) {
+      return Container(); // Return an empty container if data is not available
+    }
+
+    final mainWeather = weatherData!["weather"][0];
+    final mainInfo = weatherData!["main"];
+    final windInfo = weatherData!["wind"];
+
+    // Convert temperature from Kelvin to Celsius
+    final double temperatureInKelvin = mainInfo["temp"];
+    final double temperatureInCelsius = temperatureInKelvin - 273.15;
+
+    return Column(
+      children: [
+        Text(
+          'Weather Details:',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          'Location: ${weatherData!["name"]}, ${weatherData!["sys"]["country"]}',
+          style: TextStyle(fontSize: 16),
+        ),
+        Text(
+          'Temperature: ${temperatureInCelsius.toStringAsFixed(2)}°C',
+          style: TextStyle(fontSize: 16),
+        ),
+        Text(
+          'Weather: ${mainWeather["description"]}',
+          style: TextStyle(fontSize: 16),
+        ),
+        Text(
+          'Pressure: ${mainInfo["pressure"]} hPa',
+          style: TextStyle(fontSize: 16),
+        ),
+        Text(
+          'Humidity: ${mainInfo["humidity"]}%',
+          style: TextStyle(fontSize: 16),
+        ),
+        Text(
+          'Wind Speed: ${windInfo["speed"]} m/s',
+          style: TextStyle(fontSize: 16),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,7 +243,14 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[],
+          children: <Widget>[
+            if (currentLocation != null)
+              Text(
+                'Current Location: $currentLocation',
+                style: TextStyle(fontSize: 18),
+              ),
+            buildWeatherDetails(), // Display weather details
+          ],
         ),
       ),
       drawer: Drawer(
