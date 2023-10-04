@@ -27,6 +27,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title});
 
@@ -414,6 +416,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final city = _cityController.text;
     if (city.isNotEmpty) {
       fetchWeatherDataByCity(city);
+      _scaffoldKey.currentState!.openEndDrawer(); // Close the drawer
     }
   }
 
