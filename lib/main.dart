@@ -422,7 +422,6 @@ class _MyHomePageState extends State<MyHomePage> {
     final city = _cityController.text;
     if (city.isNotEmpty) {
       fetchWeatherDataByCity(city);
-      _scaffoldKey.currentState!.openEndDrawer(); // Close the drawer
     }
   }
 
@@ -440,6 +439,8 @@ class _MyHomePageState extends State<MyHomePage> {
           weatherData = jsonData;
           _searchError = null; // Clear any previous error
         });
+        _scaffoldKey.currentState!
+            .openEndDrawer(); // Close the drawer on sucess search
       } else {
         // Handle error
         setState(() {
