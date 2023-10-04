@@ -27,8 +27,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title});
 
@@ -47,6 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool hasInternet = true;
   Map<String, dynamic>? weatherData;
   bool isCelsius = true;
+  String? _searchError;
 
   @override
   void dispose() {
@@ -169,13 +168,20 @@ class _MyHomePageState extends State<MyHomePage> {
         final jsonData = json.decode(response.body);
         setState(() {
           weatherData = jsonData;
+          _searchError = null; // Clear any previous error
         });
       } else {
         // Handle error
+        setState(() {
+          _searchError = 'City not found'; // Set the error message
+        });
         print('Failed to fetch weather data: ${response.statusCode}');
       }
     } catch (e) {
       // Handle error
+      setState(() {
+        _searchError = 'Error fetching weather data';
+      });
       print('Error fetching weather data: $e');
     }
   }
@@ -432,13 +438,20 @@ class _MyHomePageState extends State<MyHomePage> {
         final jsonData = json.decode(response.body);
         setState(() {
           weatherData = jsonData;
+          _searchError = null; // Clear any previous error
         });
       } else {
         // Handle error
+        setState(() {
+          _searchError = 'City not found'; // Set the error message
+        });
         print('Failed to fetch weather data: ${response.statusCode}');
       }
     } catch (e) {
       // Handle error
+      setState(() {
+        _searchError = 'Error fetching weather data';
+      });
       print('Error fetching weather data: $e');
     }
   }
@@ -495,6 +508,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ),
+            if (_searchError != null)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  _searchError!,
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
           ],
         ),
       ),
