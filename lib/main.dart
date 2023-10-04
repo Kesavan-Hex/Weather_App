@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() {
   runApp(const MyApp());
@@ -40,7 +41,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    checkInternetConnectivity();
+    if (!kIsWeb) {
+      // Check internet connectivity only if not running on the web
+      checkInternetConnectivity();
+    }
   }
 
   Future<void> checkInternetConnectivity() async {
