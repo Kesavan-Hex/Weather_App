@@ -287,35 +287,125 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.network(
-                  'https://openweathermap.org/img/wn/$cloudIcon.png',
-                  width: 100,
-                  height: 100,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.visibility,
+                          size: 24,
+                          color: Colors.blue,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Visibility:',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.speed,
+                          size: 24,
+                          color: Colors.blue,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Wind Speed:',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.water,
+                          size: 24,
+                          color: Colors.blue,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Humidity:',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                SizedBox(height: 20),
-                Text(
-                  'Visibility: ${weatherData!["visibility"]} meters',
-                  style: TextStyle(fontSize: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${weatherData!["visibility"]} meters',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Text(
+                      '${windInfo["speed"]} m/s',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Text(
+                      '${mainInfo["humidity"]}',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Wind Speed: ${windInfo["speed"]} m/s',
-                  style: TextStyle(fontSize: 18),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.opacity,
+                          size: 24,
+                          color: Colors.blue,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Sea Level:',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.terrain,
+                          size: 24,
+                          color: Colors.blue,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Ground Level:',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Text(
-                  'Humidity: ${mainInfo["humidity"]}%',
-                  style: TextStyle(fontSize: 18),
-                ),
-                Text(
-                  'Sea Level: ${mainInfo["sea_level"]} hPa',
-                  style: TextStyle(fontSize: 18),
-                ),
-                Text(
-                  'Ground Level: ${mainInfo["grnd_level"]} hPa',
-                  style: TextStyle(fontSize: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${mainInfo["sea_level"]} hPa',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Text(
+                      '${mainInfo["grnd_level"]} hPa',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+        ),
+        SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: toggleTemperatureUnit,
+          child: Text(isCelsius ? 'Switch to °F' : 'Switch to °C'),
         ),
       ],
     );
@@ -341,11 +431,6 @@ class _MyHomePageState extends State<MyHomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             buildWeatherDetails(),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: toggleTemperatureUnit,
-              child: Text(isCelsius ? 'Switch to °F' : 'Switch to °C'),
-            ),
           ],
         ),
       ),
