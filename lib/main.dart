@@ -27,6 +27,21 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Define a new class to represent the daily weather forecast.
+class DailyWeather {
+  final DateTime date;
+  final double maxTemperature;
+  final double minTemperature;
+  final String icon;
+
+  DailyWeather({
+    required this.date,
+    required this.maxTemperature,
+    required this.minTemperature,
+    required this.icon,
+  });
+}
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title});
 
@@ -40,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   TextEditingController _cityController = TextEditingController();
-
+  List<DailyWeather>? dailyWeather;
   String? currentLocation;
   bool hasInternet = true;
   Map<String, dynamic>? weatherData;
@@ -170,6 +185,10 @@ class _MyHomePageState extends State<MyHomePage> {
           weatherData = jsonData;
           _searchError = null; // Clear any previous error
         });
+
+        // Pass the city information to fetchSevenDayForecastFromCity
+        final city = jsonData["name"];
+        fetchSevenDayForecastFromCity(city);
       } else {
         // Handle error
         setState(() {
@@ -183,6 +202,48 @@ class _MyHomePageState extends State<MyHomePage> {
         _searchError = 'Error fetching weather data';
       });
       print('Error fetching weather data: $e');
+    }
+  }
+
+  Future<void> fetchSevenDayForecastFromCity(String city) async {
+    final apiKey =
+        'dbf8210447f99f7efc0d4457ec4c1917'; // Replace with your API key
+    final url = 'https://api.openweathermap.org/data/2.5/onecall?' +
+        'q=$city&exclude=current,hourly,minutely,alerts&appid=$apiKey';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        final dailyData = jsonData['daily'];
+
+        List<DailyWeather> forecast = [];
+
+        for (var day in dailyData) {
+          forecast.add(DailyWeather(
+            date: DateTime.fromMillisecondsSinceEpoch(day['dt'] * 1000),
+            maxTemperature: (day['temp']['max'] - 273.15),
+            minTemperature: (day['temp']['min'] - 273.15),
+            icon: day['weather'][0]['icon'],
+          ));
+
+          // Print details to log
+          print(
+              'Date: ${DateTime.fromMillisecondsSinceEpoch(day['dt'] * 1000)}');
+          print('Max Temperature: ${day['temp']['max'] - 273.15}°C');
+          print('Min Temperature: ${day['temp']['min'] - 273.15}°C');
+          print('Icon: ${day['weather'][0]['icon']}');
+        }
+
+        setState(() {
+          dailyWeather = forecast;
+        });
+      } else {
+        print('Failed to fetch 7-day forecast: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching 7-day forecast: $e');
     }
   }
 
