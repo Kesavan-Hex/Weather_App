@@ -287,6 +287,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
+        SizedBox(height: 15),
+        ElevatedButton(
+          onPressed: toggleTemperatureUnit,
+          child: Text(isCelsius ? 'Switch to °F' : 'Switch to °C'),
+        ),
+        SizedBox(height: 15),
         Card(
           color: Colors.lightBlue[100],
           child: Padding(
@@ -410,10 +416,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: toggleTemperatureUnit,
-          child: Text(isCelsius ? 'Switch to °F' : 'Switch to °C'),
-        ),
       ],
     );
   }
