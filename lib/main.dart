@@ -172,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchWeatherData(double latitude, double longitude) async {
-    final apiKey = 'dbf8210447f99f7efc0d4457ec4c1917';
+    final apiKey = 'YOUR_OWM_API';
     final url =
         'https://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$apiKey';
 
@@ -207,7 +207,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> fetchSevenDayForecastFromCity(String city) async {
     final apiKey =
-        'dbf8210447f99f7efc0d4457ec4c1917'; // Replace with your API key
+        'YOUR_OWM_API'; // Replace with your API key
     final url = 'https://api.openweathermap.org/data/2.5/onecall?' +
         'q=$city&exclude=current,hourly,minutely,alerts&appid=$apiKey';
 
@@ -489,7 +489,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchWeatherDataByCity(String city) async {
-    final apiKey = 'dbf8210447f99f7efc0d4457ec4c1917';
+    final apiKey = 'YOUR_OWM_API';
     final url =
         'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey';
 
